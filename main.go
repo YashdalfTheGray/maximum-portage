@@ -32,7 +32,18 @@ func main() {
 		}
 	}
 
+	allFdLinks := []string{}
+
 	for _, fd := range allFds {
-		fmt.Println(fd.Name())
+		original, linkErr := os.Readlink(fd.Name())
+		if linkErr != nil {
+			fmt.Println(linkErr)
+		} else {
+			allFdLinks = append(allFdLinks, original)
+		}
+	}
+
+	for _, link := range allFdLinks {
+		fmt.Println(link)
 	}
 }
