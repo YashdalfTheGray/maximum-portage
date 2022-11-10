@@ -6,11 +6,19 @@ import (
 	"strconv"
 )
 
-func main() {
-	prodDirs, readErr := os.ReadDir("/host/proc")
-	if readErr != nil {
-		fmt.Printf("Error reading procfs, %v\n", readErr)
-	}
+type NetworkEntry struct {
+	EntryNumber     string `column:"sl"`
+	LocalAddress    string `column:"local_address"`
+	RemoteAddress   string `column:"rem_address"`
+	State           string `column:"st"`
+	TxQueue         string `column:"tx_queue"`
+	RxQueue         string `column:"rx_queue"`
+	TimerAndJiffies string `column:"tr tm->when"`
+	Retransmit      string `column:"retrnsmt"`
+	Uid             string `column:"uid"`
+	Timeout         string `column:"timeout"`
+	Inode           string `column:"inode"`
+}
 
 	pidDirs := []os.DirEntry{}
 
