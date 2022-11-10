@@ -3,7 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
+	"strings"
+
+	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/o1egl/fwencoder"
 )
 
 type NetworkEntry struct {
@@ -20,38 +25,31 @@ type NetworkEntry struct {
 	Inode           string `column:"inode"`
 }
 
-	pidDirs := []os.DirEntry{}
+func main() {
+	f, _ := os.Open("/proc/1/net/tcp")
+	defer f.Close()
 
-	for _, dir := range prodDirs {
-		if _, err := strconv.ParseUint(dir.Name(), 10, 16); err == nil {
-			fmt.Printf("PID dir: %s\n", dir.Name())
-			pidDirs = append(pidDirs, dir)
+	var entries []NetworkEntry
+	unmarshalErr := fwencoder.UnmarshalReader(f, &entries)
+	if unmarshalErr != nil {
+		fmt.Println(unmarshalErr)
+		os.Exit(1)
+	}
+
+	portSet := mapset.NewSet[int]()
+
+	for _, entry := range entries {
+		parts := strings.Split(entry.LocalAddress, ":")
+		portNumber, parseErr := strconv.ParseUint(parts[1], 16, 16)
+		if parseErr != nil {
+			fmt.Println(parseErr)
+			os.Exit(1)
 		}
+		portSet.Add(int(portNumber))
 	}
 
-	allFds := []os.DirEntry{}
+	ports := portSet.ToSlice()
+	sort.Ints(ports)
 
-	for _, dir := range pidDirs {
-		fds, fdReadErr := os.ReadDir(fmt.Sprintf("/proc/%s/fd", dir.Name()))
-		if fdReadErr != nil {
-			fmt.Println(fdReadErr)
-		} else {
-			allFds = append(allFds, fds...)
-		}
-	}
-
-	allFdLinks := []string{}
-
-	for _, fd := range allFds {
-		original, linkErr := os.Readlink(fd.Name())
-		if linkErr != nil {
-			fmt.Println(linkErr)
-		} else {
-			allFdLinks = append(allFdLinks, original)
-		}
-	}
-
-	for _, link := range allFdLinks {
-		fmt.Println(link)
-	}
+	fmt.Println(ports)
 }
