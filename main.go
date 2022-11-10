@@ -26,7 +26,7 @@ type NetworkEntry struct {
 }
 
 func main() {
-	f, _ := os.Open("/proc/1/net/tcp")
+	f, _ := os.Open("/host/proc/1/net/tcp")
 	defer f.Close()
 
 	var entries []NetworkEntry
